@@ -29,8 +29,8 @@ class V1::WeatherController < ApplicationController
     def fetch_weather_from_weatherstack(city)
       uri = URI("http://api.weatherstack.com/current?access_key=#{ENV['WEATHERSTACK_KEY']}&query=#{city}")
 
-      response = http_get(uri)
-      data = JSON.parse(response.body)
+      response = Net::HTTP.get(uri)
+      data = JSON.parse(response)
 
       raise "Weatherstack error" if data['error']
 
@@ -41,27 +41,25 @@ class V1::WeatherController < ApplicationController
     end
 
     def fetch_weather_from_openweathermap(city, country)
-      uri = URI("https://api.openweathermap.org/data/2.5/weather?q=#{city},#{country}&units=metric&appid=#{ENV['OPENWEATHER_KEY']}")
+      uri = URI("https://api.openweathermap.org/data/2.5/weather?q=#{city},#{country}&units=metric&appid=2326504fb9b100bee21400190e4dbe6d")
 
-      response = http_get(uri)
-      data = JSON.parse(response.body)
+      # Conditional is needed to request to HTTPS on localhsot
+      if Rails.env.development?
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        http.read_timeout = 5
+
+        response = http.get(uri.request_uri)
+        data = JSON.parse(response.body)
+      else
+        response = Net::HTTP.get(uri)
+        data = JSON.parse(response)
+      end
 
       {
         wind_speed: data.dig('wind', 'speed'),
         temperature_degrees: data.dig('main', 'temp')
       }
-    end
-
-    # Wrapper for HTTP requests to avoid local error
-    def http_get(uri)
-      if Rails.env.development?
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = (uri.scheme == 'https')
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        http.read_timeout = 5
-        http.get(uri.request_uri)
-      else
-        Net::HTTP.get_response(uri)
-      end
     end
 end
