@@ -56,4 +56,18 @@ class V1::WeatherControllerTest < ActionDispatch::IntegrationTest
     assert cached.key?(:wind_speed), "Fallback cache should include 'wind_speed'"
     assert cached.key?(:temperature_degrees), "Fallback cache should include 'temperature_degrees'"
   end
+
+  test "should expire cached weather data after TTL" do
+    city = "Melbourne"
+    country = "AU"
+    cache_key = "weather:#{city}"
+
+    Rails.cache.delete(cache_key)
+    get v1_weather_url(city: city, country: country)
+    cached = Rails.cache.read(cache_key)
+    assert_not_nil cached, "Cache should be populated"
+
+    sleep(V1::WeatherController::CACHE_TTL + 1)
+    assert_nil Rails.cache.read(cache_key), "Cache should expire after TTL"
+  end
 end
