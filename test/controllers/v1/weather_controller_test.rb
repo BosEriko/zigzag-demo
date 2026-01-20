@@ -70,4 +70,20 @@ class V1::WeatherControllerTest < ActionDispatch::IntegrationTest
     sleep(V1::WeatherController::CACHE_TTL + 1)
     assert_nil Rails.cache.read(cache_key), "Cache should expire after TTL"
   end
+
+  test "should return error if city parameter is missing" do
+    get v1_weather_url
+    assert_response :success
+
+    json = JSON.parse(@response.body)
+    assert_equal({ "error" => "Weather unavailable" }, json)
+  end
+
+  test "should return error if city parameter is empty" do
+    get v1_weather_url(city: "", country: "AU")
+    assert_response :success
+
+    json = JSON.parse(@response.body)
+    assert_equal({ "error" => "Weather unavailable" }, json)
+  end
 end
