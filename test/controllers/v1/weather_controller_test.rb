@@ -1,4 +1,6 @@
 require "test_helper"
+require 'openssl'
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
 class V1::WeatherControllerTest < ActionDispatch::IntegrationTest
   test "should return JSON weather data" do
