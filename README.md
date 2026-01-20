@@ -6,6 +6,8 @@ It's not advisable to do this but for demo purposes you can create the env like 
 echo "WEATHERSTACK_KEY=2ec80b99b98559693086a95f1563b92d" >> .env
 ```
 
+*Note: Make sure you run this inside the cloned repository!*
+
 ## Run the App
 This is an example weather app for ZigZag. To run you must have ruby and rails installed on your machine.
 ```sh
