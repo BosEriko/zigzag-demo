@@ -9,17 +9,22 @@ class V1::WeatherController < ApplicationController
     city = params[:city].to_s.downcase
 
     weather = Rails.cache.fetch("weather:#{city}", expires_in: CACHE_TTL) do
-      begin
-        fetch_weather_from_weatherstack(city)
-      rescue
-        fetch_weather_from_openweathermap(city)
-      end
+      fetch_weather_with_fallback(city)
     end
 
     render json: weather
   end
 
   private
+
+    def fetch_weather_with_fallback(city)
+      fetch_weather_from_weatherstack(city)
+    rescue
+      fetch_weather_from_openweathermap(city)
+    rescue => e
+      Rails.logger.warn("Both providers failed: #{e.message}")
+      Rails.cache.read("weather:#{city}") || { error: "Weather unavailable" }
+    end
 
     def fetch_weather_from_weatherstack(city)
       uri = URI("http://api.weatherstack.com/current?access_key=#{ENV['WEATHERSTACK_KEY']}&query=#{city}")
