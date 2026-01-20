@@ -6,10 +6,11 @@ class V1::WeatherController < ApplicationController
   CACHE_TTL = 3.minutes
 
   def show
-    city = params[:city].to_s.downcase
+    city = params[:city].to_s
+    country = params[:country].to_s
 
     weather = Rails.cache.fetch("weather:#{city}", expires_in: CACHE_TTL) do
-      fetch_weather_with_fallback(city)
+      fetch_weather_with_fallback(city, country)
     end
 
     render json: weather
@@ -17,12 +18,11 @@ class V1::WeatherController < ApplicationController
 
   private
 
-    def fetch_weather_with_fallback(city)
+    def fetch_weather_with_fallback(city, country)
       fetch_weather_from_weatherstack(city)
     rescue
-      fetch_weather_from_openweathermap(city)
+      fetch_weather_from_openweathermap(city, country)
     rescue => e
-      Rails.logger.warn("Both providers failed: #{e.message}")
       Rails.cache.read("weather:#{city}") || { error: "Weather unavailable" }
     end
 
@@ -40,11 +40,21 @@ class V1::WeatherController < ApplicationController
       }
     end
 
-    def fetch_weather_from_openweathermap(city)
-      uri = URI("https://api.openweathermap.org/data/2.5/weather?q=#{city}&units=metric&appid=2326504fb9b100bee21400190e4dbe6d")
+    def fetch_weather_from_openweathermap(city, country)
+      uri = URI("https://api.openweathermap.org/data/2.5/weather?q=#{city},#{country}&units=metric&appid=2326504fb9b100bee21400190e4dbe6d")
 
-      response = Net::HTTP.get(uri)
-      data = JSON.parse(response)
+      if Rails.env.development?
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        http.read_timeout = 5
+
+        response = http.get(uri.request_uri)
+        data = JSON.parse(response.body)
+      else
+        response = Net::HTTP.get(uri)
+        data = JSON.parse(response)
+      end
 
       {
         wind_speed: data.dig('wind', 'speed'),

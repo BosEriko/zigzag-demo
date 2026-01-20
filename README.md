@@ -16,5 +16,5 @@ rails s
 ## URL
 You can check it out here:
 ```sh
-http://localhost:8080/v1/weather?city=melbourne
+http://localhost:8080/v1/weather?city=melbourne&country=AU
 ```
