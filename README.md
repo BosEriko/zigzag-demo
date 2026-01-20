@@ -18,3 +18,9 @@ You can check it out here:
 ```sh
 http://localhost:8080/v1/weather?city=melbourne&country=AU
 ```
+
+## Run the Test
+You can run the test by running the following:
+```sh
+bin/rails test test/controllers/v1/weather_controller_test.rb
+```
