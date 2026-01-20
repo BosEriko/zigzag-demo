@@ -6,8 +6,15 @@ class V1::WeatherController < ApplicationController
   CACHE_TTL = 3.seconds
 
   def show
-    city = params[:city].to_s
-    country = params[:country].to_s # country included for openweather fallback
+    city = params[:city].to_s.strip
+    # country included for openweather fallback
+    country = params[:country].to_s.strip
+    country = "AU" if country.empty?
+
+    if city.empty?
+      render json: { error: "Weather unavailable" }
+      return
+    end
 
     weather = Rails.cache.fetch("weather:#{city}", expires_in: CACHE_TTL) do
       fetch_weather_with_fallback(city, country)
