@@ -1,5 +1,5 @@
 require "test_helper"
-require 'openssl'
+require "openssl"
 OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
 class V1::WeatherControllerTest < ActionDispatch::IntegrationTest
@@ -35,5 +35,25 @@ class V1::WeatherControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     cached_again = Rails.cache.read(cache_key)
     assert_equal cached, cached_again, "Cache should return the same weather data"
+  end
+
+  test "should fallback to OpenWeatherMap if Weatherstack fails" do
+    city = "Melbourne"
+    country = "AU"
+    cache_key = "weather:#{city}"
+
+    Rails.cache.delete(cache_key)
+    assert_nil Rails.cache.read(cache_key), "Cache should be empty before request"
+
+    V1::WeatherController.define_method(:fetch_weather_from_weatherstack) do |city|
+      raise "Weatherstack error"
+    end
+
+    get v1_weather_url(city: city, country: country)
+    assert_response :success
+    cached = Rails.cache.read(cache_key)
+    assert_not_nil cached, "Weather data should be cached after fallback to OpenWeatherMap"
+    assert cached.key?(:wind_speed), "Fallback cache should include 'wind_speed'"
+    assert cached.key?(:temperature_degrees), "Fallback cache should include 'temperature_degrees'"
   end
 end
