@@ -7,7 +7,7 @@ class V1::WeatherController < ApplicationController
 
   def show
     city = params[:city].to_s
-    country = params[:country].to_s
+    country = params[:country].to_s # country included for openweather fallback
 
     weather = Rails.cache.fetch("weather:#{city}", expires_in: CACHE_TTL) do
       fetch_weather_with_fallback(city, country)
@@ -43,6 +43,7 @@ class V1::WeatherController < ApplicationController
     def fetch_weather_from_openweathermap(city, country)
       uri = URI("https://api.openweathermap.org/data/2.5/weather?q=#{city},#{country}&units=metric&appid=2326504fb9b100bee21400190e4dbe6d")
 
+      # Conditional is needed to request to HTTPS on localhsot
       if Rails.env.development?
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
