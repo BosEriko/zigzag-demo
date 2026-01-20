@@ -1,24 +1,11 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This is an example weather app for ZigZag. To run you must have ruby and rails installed on your machine.
+```sh
+rails s
+```
 
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+You can check it out here:
+```sh
+http://localhost:8080/v1/weather?city=melbourne
+```
