@@ -3,7 +3,7 @@ require 'uri'
 require 'json'
 
 class V1::WeatherController < ApplicationController
-  CACHE_TTL = 3.minutes
+  CACHE_TTL = 3.seconds
 
   def show
     city = params[:city].to_s
